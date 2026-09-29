@@ -30,6 +30,7 @@ create table if not exists songs (
   avg_chord_size    real,               -- notes per onset
   difficulty_score  real,               -- onsets/s + chord weight + keyboard span; bucketed into difficulty
   difficulty        text check (difficulty in ('easy','medium','hard')),
+  density           real[],             -- onsets/s in 40 equal sections of the whole song: "where it gets hard"
   lowest_pitch      int,
   highest_pitch     int,
   right_hand_ratio  real,               -- share of notes at or above middle C
@@ -59,6 +60,7 @@ create table if not exists songs (
 alter table songs add column if not exists onsets_per_sec   real;
 alter table songs add column if not exists avg_chord_size   real;
 alter table songs add column if not exists difficulty_score real;
+alter table songs add column if not exists density          real[];
 
 create index if not exists songs_created_idx   on songs (created_at desc);
 -- The next three back server-side search and sort once libraries outgrow a single fetch

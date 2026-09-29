@@ -15,6 +15,17 @@ const PREVIEW_MAX_NOTES = 500;
 const MIDDLE_C = 60;
 /** Notes starting within 30ms of each other are played together (a chord), so they count as one onset. */
 const CHORD_WINDOW_SEC = 0.03;
+/** The whole song split into this many sections for the "where it gets hard" strip. */
+export const DENSITY_BUCKETS = 40;
+
+/** Onsets per second in each of DENSITY_BUCKETS equal slices of the song. */
+export function densityProfile(onsetTimes: number[], duration: number) {
+  const span = Math.max(duration, 1);
+  const size = span / DENSITY_BUCKETS;
+  const counts = new Array<number>(DENSITY_BUCKETS).fill(0);
+  for (const t of onsetTimes) counts[Math.min(DENSITY_BUCKETS - 1, Math.floor(t / size))]++;
+  return counts.map((c) => +(c / size).toFixed(2));
+}
 
 /** Track and sequence names that DAWs and notation apps write by default. Never a song title. */
 const GENERIC_NAME =
@@ -123,14 +134,15 @@ export async function parseMidiBuffer(buf: ArrayBuffer, fileName: string): Promi
   const ts = midi.header.timeSignatures[0]?.timeSignature;
 
   const sorted = [...notes].sort((a, b) => a.time - b.time || a.midi - b.midi);
-  let onsets = 0;
+  const onsetTimes: number[] = [];
   let lastOnset = -Infinity;
   for (const n of sorted) {
     if (n.time - lastOnset > CHORD_WINDOW_SEC) {
-      onsets++;
+      onsetTimes.push(n.time);
       lastOnset = n.time;
     }
   }
+  const onsets = onsetTimes.length;
   const ops = onsets / playable;
   const avgChord = notes.length / onsets;
   const score = difficultyScore(ops, avgChord, high - low);
@@ -156,6 +168,7 @@ export async function parseMidiBuffer(buf: ArrayBuffer, fileName: string): Promi
     avg_chord_size: +avgChord.toFixed(2),
     difficulty_score: +score.toFixed(2),
     difficulty: difficultyFor(score),
+    density: densityProfile(onsetTimes, duration),
     lowest_pitch: low,
     highest_pitch: high,
     right_hand_ratio: +(rightHand / notes.length).toFixed(2),

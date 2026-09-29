@@ -1,3 +1,4 @@
+import { DensityStrip } from "@/components/DensityStrip";
 import { DifficultyMeter, difficultyPace } from "@/components/DifficultyMeter";
 import { formatDuration, pitchName, timeAgo } from "@/lib/format";
 import type { Song } from "@/types";
@@ -99,6 +100,7 @@ export function DifficultySection({ song }: { song: Song }) {
           {chords}
         </p>
       )}
+      <DensityStrip density={song.density} durationSec={song.duration_sec} />
     </Sub>
   );
 }

@@ -30,6 +30,8 @@ export type Song = {
   /** Continuous score behind `difficulty`; used for "easiest first" sorting. */
   difficulty_score: number | null;
   difficulty: Difficulty | null;
+  /** Onsets per second across the whole song in 40 equal sections: where it gets hard. */
+  density: number[] | null;
   lowest_pitch: number | null;
   highest_pitch: number | null;
   right_hand_ratio: number | null;
