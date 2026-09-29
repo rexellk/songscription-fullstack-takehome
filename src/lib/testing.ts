@@ -1,0 +1,42 @@
+import type { Song } from "@/types";
+
+/** A complete song row with sensible defaults, for unit tests. */
+export function makeSong(overrides: Partial<Song> = {}): Song {
+  return {
+    id: overrides.id ?? Math.random().toString(36).slice(2),
+    title: "Song",
+    file_name: "song.mid",
+    storage_path: "x.mid",
+    file_size_bytes: 1000,
+    file_hash: null,
+    duration_sec: 60,
+    bpm: 100,
+    time_signature: "4/4",
+    key_name: "C major",
+    key_confidence: 0.9,
+    note_count: 100,
+    notes_per_sec: 2,
+    onsets_per_sec: 2,
+    avg_chord_size: 1,
+    difficulty_score: 2,
+    difficulty: "easy",
+    density: null,
+    lowest_pitch: 48,
+    highest_pitch: 72,
+    right_hand_ratio: 0.6,
+    track_count: 1,
+    preview_notes: [],
+    is_favorite: false,
+    tags: [],
+    practice_count: 0,
+    last_practiced_at: null,
+    best_accuracy: null,
+    quality_rating: null,
+    quality_note: null,
+    practice_speed: null,
+    practice_hand: null,
+    practice_theme: null,
+    created_at: "2026-09-01T00:00:00Z",
+    ...overrides,
+  };
+}

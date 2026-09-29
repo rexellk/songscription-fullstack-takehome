@@ -11,7 +11,9 @@
     "inspect:samples": "tsx scripts/inspect-samples.ts",
     "check:contrast": "tsx scripts/check-contrast.ts",
     "test": "playwright test",
-    "seed:300": "NODE_OPTIONS=--experimental-websocket tsx scripts/seed-300.ts"
+    "seed:300": "NODE_OPTIONS=--experimental-websocket tsx scripts/seed-300.ts",
+    "test:unit": "vitest run",
+    "backfill:density": "NODE_OPTIONS=--experimental-websocket tsx scripts/backfill-density.ts"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
@@ -35,6 +37,7 @@
     "postcss": "^8.5.0",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.23.15",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.11"
   }
 }
