@@ -2,20 +2,141 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ivory (light). Every color in the app comes from these tokens. */
 :root {
-  --background: #ffffff;
-  --foreground: #0a0a0a;
+  color-scheme: light;
+  --paper: #f4efe4;
+  --paper-raised: #fbf8f1;
+  --paper-sunk: #ede6d6;
+  --lane: #e4dbc8;
+  --rule: #dcd3c1;
+  --rule-strong: #c4b99f;
+  --ink: #1b1916;
+  --ink-2: #5e574c;
+  --ink-3: #6f6758;
+  --brass: #8c6723;
+  --on-brass: #fbf8f1;
+  --brass-soft: #efe3c8;
+  --ebony: #171512;
+  --ebony-line: #2a2622;
+  --ivory-note: #ede6d6;
+  --oxblood: #9e3b2c;
+  --scrim: rgb(27 25 22 / 0.2); /* ink at 20% */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Moonlight (dark). Desaturated night blue, never purple. */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #0f131a;
+  --paper-raised: #161b24;
+  --paper-sunk: #1d2330;
+  --lane: #232a38;
+  --rule: #2a3140;
+  --rule-strong: #3a4356;
+  --ink: #e8e5dc;
+  --ink-2: #a9adb8;
+  --ink-3: #828896;
+  --brass: #d4a955;
+  --on-brass: #14110a;
+  --brass-soft: #2e2819;
+  --ebony: #0a0d12;
+  --ebony-line: #161b24;
+  --ivory-note: #e8e5dc;
+  --oxblood: #d0705f;
+  --scrim: rgb(10 13 18 / 0.6); /* ebony at 60%: light ink would brighten the page, not dim it */
+}
+
+@layer base {
+  html,
+  body {
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  body {
+    @apply font-sans text-ui;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* One focus style everywhere: 2px brass, 2px offset. Only shown for keyboard focus. */
+  :focus-visible {
+    outline: 2px solid var(--brass);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--brass-soft);
+    color: var(--ink);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--ink-3);
+    opacity: 1;
   }
 }
 
-html,
-body {
-  background: var(--background);
-  color: var(--foreground);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Sonner toasts restyled to the paper system: raised paper, hairline rule, no shadow.
+   Sonner injects its stylesheet at runtime (after this one), so `html` lifts these rules above it. */
+html [data-sonner-toaster][data-sonner-theme] {
+  --normal-bg: var(--paper-raised);
+  --normal-border: var(--rule);
+  --normal-text: var(--ink);
+  --border-radius: 4px;
+}
+
+html [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"] {
+  box-shadow: none;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  padding: 12px 16px;
+  gap: 8px;
+}
+
+html [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"] [data-title] {
+  font-weight: 400;
+}
+
+html [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"] [data-description] {
+  color: var(--ink-3);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 12px;
+}
+
+html [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-type="error"] [data-title] {
+  color: var(--oxblood);
+}
+
+html [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"] [data-button] {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+html [data-sonner-toaster][data-sonner-theme] [data-sonner-toast]:focus-visible,
+html [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"] [data-button]:focus-visible,
+html [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"] [data-close-button]:focus-visible {
+  box-shadow: none;
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+/* Copy carries the meaning; the default success/error glyphs are decoration. */
+html [data-sonner-toaster] [data-sonner-toast] [data-icon] {
+  display: none;
 }

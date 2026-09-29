@@ -34,3 +34,12 @@ next-env.d.ts
 # editor
 .vscode/
 .idea/
+
+# playwright
+test-results/
+playwright-report/
+blob-report/
+
+# supabase cli
+supabase/.temp/
+.next-verify/
