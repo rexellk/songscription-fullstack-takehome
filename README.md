@@ -1,6 +1,6 @@
 # Anything Piano: song library
 
-A web version of the Anything Piano library: every song a learner has brought in, ready to practice. Uploading a `.mid` file stands in for "the user just transcribed a song".
+A web version of the Anything Piano library: every song a learner has brought in, ready to practice. Uploading a `.mid` file stands in for the step Songscription's models do: "the user just transcribed a song".
 
 **Live demo:** _link added after deploy_
 
