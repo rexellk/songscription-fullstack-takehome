@@ -2,7 +2,7 @@
 
 A web version of the Anything Piano library: every song a learner has brought in, ready to practice. Uploading a `.mid` file stands in for the step Songscription's models do: "the user just transcribed a song".
 
-**Live demo:** _link added after deploy_
+**Live demo:** https://songscription-fullstack-takehome-pi.vercel.app. It's one shared demo library, so feel free to add, rate, or delete songs. I reset it regularly.
 
 Anything Piano has no fixed catalog; people bring any song. So the library *is* the catalog. An empty library is onboarding, and a full one is the reason to come back. Each feature maps to one step: add a song, practice it for the first time, come back tomorrow, build a habit.
 
@@ -156,10 +156,11 @@ This is a web prototype of a mobile product, so it's built to move:
 
 1. **Accounts and Pro.** Supabase Auth, a `user_id` on songs and events, and RLS policies of `auth.uid() = user_id` in place of the open demo ones. Then a Pro entitlement (for example RevenueCat on mobile, synced to a Supabase table) that gates things like practice themes and transcription minutes.
 2. **A reason to come back tomorrow.** A visible streak, and a per-visit session id on events, so D1 and D7 retention can be measured per person, not just per song.
-3. **Scale past a few hundred songs.** A small thumbnail column for the list, with the full notes loaded when the drawer opens, then keyset pagination and server-side search on the trigram index.
-4. **A share sheet from TikTok and Reels.** Most songs people want to learn start as a clip, so the fastest path is straight from the clip into the library.
-5. **Real practice data.** A `practice_sessions` table that replaces the mocked counters, with atomic writes. That gives real streaks, real accuracy trends, and a better difficulty model trained on how people actually play.
-6. **Connect the library to arrangements.** Anything Piano already arranges a song at your level. The library could show which levels each song has, and suggest stepping up once your best accuracy at the current level passes 90%. That turns mastery into the next reason to open the app.
+3. **Rename songs and undo deletes.** An editable title in the drawer for file-name titles, and a short undo window after deleting, the pattern people expect on a phone.
+4. **Scale past a few hundred songs.** A small thumbnail column for the list, with the full notes loaded when the drawer opens, then keyset pagination and server-side search on the trigram index.
+5. **A share sheet from TikTok and Reels.** Most songs people want to learn start as a clip, so the fastest path is straight from the clip into the library.
+6. **Real practice data.** A `practice_sessions` table that replaces the mocked counters, with atomic writes. That gives real streaks, real accuracy trends, and a better difficulty model trained on how people actually play.
+7. **Connect the library to arrangements.** Anything Piano already arranges a song at your level. The library could show which levels each song has, and suggest stepping up once your best accuracy at the current level passes 90%. That turns mastery into the next reason to open the app.
 
 ## Notes
 
