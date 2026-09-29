@@ -8,7 +8,7 @@ import type { PreviewNote } from "@/types";
  * so neither costs anything on page load. Only one song plays at a time.
  */
 
-export type Surface = "card" | "drawer";
+export type Surface = "card" | "drawer" | "practice";
 export type PlayerState =
   | { status: "idle" }
   | { status: "loading"; songId: string; surface: Surface }
@@ -34,6 +34,15 @@ let tone: ToneModule | null = null;
 let sampler: import("tone").Sampler | null = null;
 let loading: Promise<void> | null = null;
 let stopTimer: ReturnType<typeof setTimeout> | null = null;
+/** Song time where the current preview starts: just before the first note, so there's no dead air. */
+let offset = 0;
+const LEAD_IN_SEC = 0.4;
+
+/** Where a preview of these notes starts, in song time. Rolls use it to line up with the sound. */
+export function previewStart(notes: PreviewNote[]) {
+  const first = notes.reduce((m, n) => Math.min(m, n.t), Infinity);
+  return Number.isFinite(first) ? Math.max(0, first - LEAD_IN_SEC) : 0;
+}
 let state: PlayerState = { status: "idle" };
 const listeners = new Set<() => void>();
 
@@ -51,7 +60,7 @@ export const player = {
   /** Seconds since the current preview started, from the audio clock, not a timer. */
   position() {
     if (state.status !== "playing" || !tone) return 0;
-    return Math.max(0, tone.getTransport().seconds);
+    return offset + Math.max(0, tone.getTransport().seconds);
   },
 };
 
@@ -91,12 +100,15 @@ export async function play(songId: string, surface: Surface, notes: PreviewNote[
   const Tone = tone;
   transport.cancel();
   transport.position = 0;
+  // Many files open with silence (a pickup bar, a count-in). Skip it so sound starts right away.
+  offset = previewStart(notes);
+  const end = offset + seconds;
   for (const n of notes) {
-    if (n.t >= seconds) continue;
-    const length = Math.max(0.05, Math.min(n.d, seconds - n.t));
+    if (n.t < offset || n.t >= end) continue;
+    const length = Math.max(0.05, Math.min(n.d, end - n.t));
     transport.schedule((time) => {
       piano.triggerAttackRelease(Tone.Frequency(n.p, "midi").toNote(), length, time, 0.7);
-    }, n.t);
+    }, n.t - offset);
   }
   transport.start("+0.05");
   setState({ status: "playing", songId, surface, startedAt: Date.now(), seconds });

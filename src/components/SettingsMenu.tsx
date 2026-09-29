@@ -6,6 +6,7 @@ import { HAND_OPTIONS, SPEED_OPTIONS, speedLabel, usePracticeDefaults } from "@/
 import { track } from "@/lib/track";
 import { SHORT_HAND } from "@/components/PracticeSettings";
 import { Segmented } from "@/components/Segmented";
+import { ThemePicker } from "@/components/ThemePicker";
 import type { PracticeHand } from "@/types";
 
 const THEMES = [
@@ -69,7 +70,7 @@ export function SettingsMenu() {
           ref={panel}
           role="dialog"
           aria-label="Settings"
-          className="absolute right-0 top-12 z-30 w-[288px] animate-fade-in rounded border border-rule-strong bg-paper-raised p-4"
+          className="absolute right-0 top-12 z-30 max-h-[calc(100vh-72px)] w-[320px] overflow-y-auto animate-fade-in rounded border border-rule-strong bg-paper-raised p-4"
         >
           <p className="text-ui font-medium text-ink">Rexell</p>
           <p className="font-mono text-meta text-ink-3">Demo account</p>
@@ -116,6 +117,20 @@ export function SettingsMenu() {
                 track("practice_settings_changed", { scope: "library", setting: "hand", value: v });
               }}
             />
+            <fieldset>
+              <legend className="text-meta text-ink-3">Practice theme</legend>
+              <div className="mt-2">
+                <ThemePicker
+                  name="default-theme"
+                  value={mounted ? defaults.theme : null}
+                  onChange={(t) => {
+                    if (!t) return;
+                    setDefaults({ theme: t });
+                    track("practice_theme_changed", { scope: "library", theme: t });
+                  }}
+                />
+              </div>
+            </fieldset>
           </div>
         </div>
       )}

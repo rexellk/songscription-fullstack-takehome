@@ -10,7 +10,7 @@ export type TrackEvents = {
   song_added: { source: "upload" | "sample" | "seed"; duration_sec: number | null; difficulty: string | null };
   upload_failed: { reason: UploadFailureReason; source: "upload" | "sample" | "seed" };
   duplicate_detected: { source: "upload" | "sample" | "seed" };
-  preview_played: { surface: "card" | "drawer" };
+  preview_played: { surface: "card" | "drawer" | "practice" };
   drawer_opened: { surface: "card" | "up_next" | "duplicate" };
   practice_started: { surface: "up_next" | "drawer"; slot?: SuggestionSlot };
   suggestion_clicked: { slot: SuggestionSlot };
@@ -19,6 +19,7 @@ export type TrackEvents = {
   sort_changed: { value: string };
   transcription_rated: { rating: string };
   theme_changed: { mode: string };
+  practice_theme_changed: { scope: "library" | "song"; theme: string | null };
   practice_settings_changed: { scope: "library" | "song"; setting: string; value: string | number | null };
 };
 
