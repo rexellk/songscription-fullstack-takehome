@@ -72,6 +72,7 @@ export function ThemePicker({ name, value, onChange, defaultTheme, tone = "paper
   ];
   const text = tone === "ebony" ? "text-ivory-note" : "text-ink-2";
   return (
+    <div>
     <div className={`grid gap-1 ${defaultTheme ? "grid-cols-6" : "grid-cols-5"}`}>
       {options.map((o) => {
         const checked = value === o.value;
@@ -96,6 +97,12 @@ export function ThemePicker({ name, value, onChange, defaultTheme, tone = "paper
           </label>
         );
       })}
+    </div>
+      {reduced && (
+        <p className={`mt-2 text-meta ${tone === "ebony" ? "text-[color-mix(in_srgb,var(--ivory-note)_70%,transparent)]" : "text-ink-3"}`} role="note">
+          Particles are off because Reduce motion is on in your system settings.
+        </p>
+      )}
     </div>
   );
 }

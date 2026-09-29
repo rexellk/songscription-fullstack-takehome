@@ -21,6 +21,8 @@ export type ThemeConfig = {
   shape: Shape;
   spin: boolean;
   twinkle: boolean;
+  /** Overall strength, 0..1. Big soft shapes need less than tiny sparks to read the same. */
+  opacity: number;
   /** Token names; resolved to colors at draw time so they follow the palette. */
   colors: string[];
   /** Key highlight when a note lands. */
@@ -30,32 +32,34 @@ export type ThemeConfig = {
 export const THEME_ORDER: PracticeTheme[] = ["off", "embers", "petals", "snow", "stardust"];
 
 export const THEMES: Record<PracticeTheme, ThemeConfig> = {
-  off: { label: "Off", burst: [0, 0], speed: [0, 0], spread: 0, gravity: 0, life: [0, 0], size: [0, 0], shape: "dot", spin: false, twinkle: false, colors: [], keyColor: "brass" },
+  off: { label: "Off", burst: [0, 0], speed: [0, 0], spread: 0, gravity: 0, life: [0, 0], size: [0, 0], shape: "dot", spin: false, twinkle: false, opacity: 0, colors: [], keyColor: "brass" },
   embers: {
     label: "Embers",
-    burst: [6, 12],
-    speed: [60, 150],
-    spread: 40,
+    burst: [8, 14],
+    speed: [70, 160],
+    spread: 45,
     gravity: -40,
-    life: [0.5, 1.1],
-    size: [1, 2.2],
+    life: [0.6, 1.3],
+    size: [1.5, 3],
     shape: "spark",
     spin: false,
     twinkle: true,
+    opacity: 1,
     colors: ["brass"],
     keyColor: "brass",
   },
   petals: {
     label: "Petals",
-    burst: [4, 8],
-    speed: [30, 80],
-    spread: 70,
+    burst: [2, 4],
+    speed: [25, 65],
+    spread: 60,
     gravity: -10,
-    life: [1.2, 2.2],
-    size: [2.5, 4.5],
+    life: [0.9, 1.6],
+    size: [1.8, 3],
     shape: "ellipse",
     spin: true,
     twinkle: false,
+    opacity: 0.55,
     colors: ["oxblood", "ivory-note"],
     keyColor: "oxblood",
   },
@@ -70,6 +74,7 @@ export const THEMES: Record<PracticeTheme, ThemeConfig> = {
     shape: "dot",
     spin: false,
     twinkle: false,
+    opacity: 0.8,
     colors: ["ivory-note"],
     keyColor: "ivory-note",
   },
@@ -84,6 +89,7 @@ export const THEMES: Record<PracticeTheme, ThemeConfig> = {
     shape: "square",
     spin: false,
     twinkle: true,
+    opacity: 0.9,
     colors: ["ivory-note"],
     keyColor: "ivory-note",
   },
@@ -162,7 +168,7 @@ export class ParticlePool {
       const p = this.age[k] / this.life[k];
       let alpha = 1 - p;
       if (t.twinkle) alpha *= 0.6 + 0.4 * Math.sin(this.age[k] * 30 + k);
-      ctx.globalAlpha = Math.max(0, alpha);
+      ctx.globalAlpha = Math.max(0, alpha * t.opacity);
       ctx.fillStyle = colors[this.color[k]];
       const s = this.size[k];
       const x = this.x[k];
