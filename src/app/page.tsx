@@ -1,14 +1,33 @@
-export default function Home() {
+import { Library } from "@/components/Library";
+import { isSupabaseConfigured } from "@/lib/supabase";
+
+export default function LibraryPage() {
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
-      <h1 className="text-3xl font-semibold">MIDI Library — starter</h1>
-      <p className="mt-4 text-neutral-600 dark:text-neutral-400">
-        This is the starter for the Songscription fullstack take-home. Read{" "}
-        <code className="rounded bg-neutral-100 px-1 py-0.5 text-sm dark:bg-neutral-800">
-          README.md
-        </code>{" "}
-        for the prompt and what to build. Replace this page with your own.
-      </p>
+    <main className="mx-auto max-w-page px-4 pb-16 pt-6 sm:px-6">
+      {isSupabaseConfigured ? <Library /> : <SetupNotice />}
     </main>
+  );
+}
+
+/** Shown to anyone who clones the repo without a .env.local, instead of a blank page. */
+function SetupNotice() {
+  return (
+    <>
+      <header className="border-b border-rule pb-6">
+        <div className="flex h-10 items-center">
+          <span className="text-ui font-medium text-ink">Anything Piano</span>
+        </div>
+        <h1 className="mt-10 font-serif text-display-sm text-ink sm:text-display">Library</h1>
+      </header>
+      <section className="mt-10 max-w-xl">
+        <h2 className="font-serif text-section text-ink">Connect a database to begin</h2>
+        <p className="mt-2 text-body text-ink-2">
+          Your library is stored in Supabase. Run{" "}
+          <code className="font-mono text-meta text-ink">supabase/schema.sql</code> in a new project, then add
+          its URL and anon key to <code className="font-mono text-meta text-ink">.env.local</code> and restart
+          the dev server.
+        </p>
+      </section>
+    </>
   );
 }
