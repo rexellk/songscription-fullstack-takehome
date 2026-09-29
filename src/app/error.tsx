@@ -15,7 +15,7 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
       </div>
       <section className="mt-16 max-w-xl" role="alert">
         <h1 className="font-serif text-display-sm text-ink">Something went wrong</h1>
-        <p className="mt-3 text-body text-ink-2">Your songs are safe. Reload the page to pick up where you left off.</p>
+        <p className="mt-3 text-body text-ink-2">Your songs are safe. Try again to pick up where you left off.</p>
         <button
           type="button"
           onClick={reset}

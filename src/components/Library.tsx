@@ -21,6 +21,9 @@ import { DrawerPreview } from "@/components/DrawerPreview";
 import type { Song } from "@/types";
 import { toast } from "sonner";
 
+/** Search and filters earn their space once there's something to search. */
+const TOOLBAR_FROM = 4;
+
 export function Library() {
   const picker = useRef<FilePickerHandle>(null);
   const [selected, setSelected] = useState<{ id: string; mode: DrawerMode; slot?: SuggestionSlot } | null>(null);
@@ -54,9 +57,11 @@ export function Library() {
   const [query, setQuery] = useState<LibraryQuery>(DEFAULT_QUERY);
   // Typing stays instant at 300 songs; the grid catches up a frame later if it has to.
   const deferredQuery = useDeferredValue(query);
-  const visible = useMemo(() => applyQuery(songs, deferredQuery), [songs, deferredQuery]);
+  // Without a toolbar there's no way to see or clear a filter, so small libraries ignore it.
+  const hasToolbar = songs.length >= TOOLBAR_FROM;
+  const visible = useMemo(() => applyQuery(songs, hasToolbar ? deferredQuery : DEFAULT_QUERY), [songs, deferredQuery, hasToolbar]);
   const keys = useMemo(() => keysInLibrary(songs), [songs]);
-  const filtering = isFiltering(query);
+  const filtering = hasToolbar && isFiltering(query);
   // True for the frame or two while a big library catches up with what was just typed.
   const catchingUp = query !== deferredQuery;
 
@@ -174,7 +179,7 @@ export function Library() {
           {status === "ready" && (
             <UpNext suggestions={suggestions} onOpen={openSuggestion} onPractice={practiceSuggestion} />
           )}
-          {status === "ready" && !empty && (
+          {status === "ready" && hasToolbar && (
             <div className="mb-6">
               {suggestions.length > 0 && <h2 className="mb-4 font-serif text-section text-ink">All songs</h2>}
               <Toolbar
@@ -199,6 +204,7 @@ export function Library() {
                 freshIds={freshIds}
                 onOpen={openSong}
                 onToggleFavorite={toggleFavorite}
+                onAdd={status === "ready" && !hasToolbar ? openPicker : undefined}
               />
             </div>
           )}

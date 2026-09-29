@@ -1,6 +1,7 @@
 # QA tests (Playwright)
 
-Run: `npx playwright test` (Chromium only, serial, one worker).
+Run: `npx playwright test` (Chromium only, serial, one worker). Only `tests/**/*.spec.ts` is collected
+(`testMatch`); the Vitest unit tests in `src/**/*.test.ts` run with `npm run test:unit`.
 
 - Uses the dev server on http://localhost:3000. If it's already running it is reused, otherwise `npm run dev` is started.
 - Talks to the REAL Supabase project from `.env.local`. Every test generates a unique MIDI file at runtime
@@ -22,4 +23,8 @@ Run: `npx playwright test` (Chromium only, serial, one worker).
 - Demo songs are only ever read (search, filter, sort, open/close drawer). Every write goes to a QA song.
 - Known app bugs are asserted, not skipped: 7c (focus doesn't return to the card title when the drawer closes)
   and 7d (the drawer has no accessible name in practice mode). They go green once the app is fixed.
-- The audio test skips itself if tonejs.github.io is unreachable.
+- The audio tests (card preview, practice stage Play) skip themselves if tonejs.github.io is unreachable.
+- Practice stage, song theme, and practice_started tests run on a QA song only. The Up next slot test
+  narrows the songs GET (via `page.route`) to two QA songs, so Up next is built from them alone ("Start here").
+- `drawer_opened` events logged when a test only opens a demo song's drawer are removed by teardown.
+- The library practice theme lives in localStorage (fresh per test context); the test still resets it to Embers.

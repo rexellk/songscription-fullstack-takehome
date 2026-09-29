@@ -7,6 +7,8 @@ import { defineConfig, devices } from "@playwright/test";
  */
 export default defineConfig({
   testDir: "./tests",
+  // Vitest owns src/**/*.test.ts; Playwright only runs the e2e specs here.
+  testMatch: "**/*.spec.ts",
   fullyParallel: false,
   workers: 1,
   retries: 0,

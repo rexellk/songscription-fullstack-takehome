@@ -19,7 +19,7 @@ type Props = {
 export function PracticeSettings({ song, defaults, onChange }: Props) {
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-ui text-ink-2">For this song only. Default follows your practice defaults in Settings.</p>
+      <p className="text-ui text-ink-2">For this song only. Default uses your practice defaults from Settings.</p>
       <Segmented
         legend="Speed"
         name={`speed-${song.id}`}

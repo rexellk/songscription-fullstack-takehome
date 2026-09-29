@@ -13,8 +13,10 @@ type Props = {
   variant?: "paper" | "ebony";
   /** Seconds into the song; draws a brass playhead when set. */
   playheadSec?: number | null;
-  /** Only draw the first N seconds (the drawer preview), otherwise the whole song. */
+  /** Only draw N seconds (a preview window), otherwise the whole song. */
   windowSec?: number;
+  /** Song time the window starts at (previews skip leading silence). */
+  windowStart?: number;
   /** Notes at full strength (hover or focus) vs. resting at 85%. */
   emphasized?: boolean;
   className?: string;
@@ -52,6 +54,7 @@ export function PianoRoll({
   variant = "paper",
   playheadSec = null,
   windowSec,
+  windowStart = 0,
   emphasized = false,
   className = "",
   label,
@@ -79,8 +82,9 @@ export function PianoRoll({
     ctx.fillRect(0, 0, width, height);
 
     const end = notes.reduce((m, n) => Math.max(m, n.t + n.d), 0);
-    const span = windowSec ? Math.min(windowSec, end || windowSec) : end;
-    const visible = windowSec ? notes.filter((n) => n.t <= span) : notes;
+    const start = windowSec ? windowStart : 0;
+    const span = windowSec ? Math.min(windowSec, Math.max(0, end - start) || windowSec) : end;
+    const visible = windowSec ? notes.filter((n) => n.t >= start && n.t <= start + span) : notes;
 
     // Pitch window fitted to the notes on screen: 2 semitones of air, at least MIN_SPAN tall.
     let lo = (low ?? visible.reduce((m, n) => Math.min(m, n.p), 127)) - 2;
@@ -110,7 +114,7 @@ export function PianoRoll({
       ctx.beginPath();
       for (const n of visible) {
         if ((n.p >= RIGHT_HAND_FROM) !== (hand === "right")) continue;
-        const x = n.t * pxPerSec;
+        const x = (n.t - start) * pxPerSec;
         const w = Math.max(2, n.d * pxPerSec - 0.5);
         const y = (hi - n.p) * rowH + (rowH - noteH) / 2;
         ctx.roundRect(x, y, w, noteH, radius);
@@ -120,11 +124,11 @@ export function PianoRoll({
     ctx.globalAlpha = 1;
 
     if (playheadSec != null && playheadSec >= 0) {
-      const x = Math.min(width - 1, playheadSec * pxPerSec);
+      const x = Math.min(width - 1, Math.max(0, (playheadSec - start) * pxPerSec));
       ctx.fillStyle = t.brass;
       ctx.fillRect(Math.round(x), 0, 1.5, height);
     }
-  }, [notes, low, high, height, variant, playheadSec, windowSec, emphasized]);
+  }, [notes, low, high, height, variant, playheadSec, windowSec, windowStart, emphasized]);
 
   // Redraw after the theme attribute lands, so getComputedStyle sees the new tokens.
   useEffect(() => {

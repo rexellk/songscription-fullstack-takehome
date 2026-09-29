@@ -94,18 +94,22 @@ export function useLibrary({ onDuplicate }: Options = {}) {
    */
   const patchSong = useCallback(
     async (song: Song, patch: SongUpdate, failure = "We couldn't save that change. Try again.") => {
-      replaceSong({ ...song, ...patch });
+      // Every step merges into the *current* row, touching only this patch's fields, so two quick
+      // edits to the same song (say, a practice session and a theme pick) can't overwrite each other.
+      const merge = (fields: SongUpdate) =>
+        setSongs((all) => all.map((x) => (x.id === song.id ? { ...x, ...fields } : x)));
+      const previous = Object.fromEntries(Object.keys(patch).map((k) => [k, song[k as keyof Song]])) as SongUpdate;
+      merge(patch);
       try {
-        const saved = await updateSong(song.id, patch);
-        replaceSong({ ...song, ...patch, ...saved });
+        merge(await updateSong(song.id, patch));
         return true;
       } catch {
-        replaceSong(song);
+        merge(previous);
         toast.error(failure);
         return false;
       }
     },
-    [replaceSong],
+    [],
   );
 
   return { songs, status, pending, freshIds, reload, addFiles, replaceSong, removeSong, insertSong, patchSong };

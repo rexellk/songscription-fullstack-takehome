@@ -28,6 +28,10 @@ type Props = {
 };
 
 const EXIT_MS = 220;
+/** A drag this far (px), or this fast (px/ms), dismisses the bottom sheet. */
+const DISMISS_DISTANCE = 120;
+const DISMISS_VELOCITY = 0.6;
+const isBottomSheet = () => window.matchMedia("(max-width: 639px)").matches;
 
 /**
  * Detail view. Slides in from the right on desktop, up from the bottom on phones.
@@ -38,6 +42,8 @@ export function SongDrawer({ song, mode, onModeChange, onClose, onPatch, onPract
   const [shown, setShown] = useState<Song | null>(song);
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const drag = useRef<{ startY: number; startT: number } | null>(null);
   const panel = useRef<HTMLDivElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const [defaults] = usePracticeDefaults();
@@ -90,10 +96,32 @@ export function SongDrawer({ song, mode, onModeChange, onClose, onPatch, onPract
         className={`absolute flex flex-col overflow-hidden outline-none transition-transform duration-[220ms] ease-drawer max-sm:inset-x-0 max-sm:bottom-0 max-sm:h-[88vh] max-sm:rounded-t-lg max-sm:border-t sm:bottom-0 sm:right-0 sm:top-0 sm:w-[460px] sm:border-l ${
           stage ? "border-ebony-line bg-ebony" : "border-rule bg-paper-raised"
         } ${open ? "translate-x-0 translate-y-0" : "max-sm:translate-y-full sm:translate-x-full"}`}
+        style={dragY ? { transform: `translateY(${dragY}px)`, transition: "none" } : undefined}
       >
         <span {...startGuard} />
+        {/* On phones this bar is the sheet's handle: drag it down to dismiss. */}
         <div
-          className={`relative flex h-12 shrink-0 items-center justify-end px-3 sm:h-14 ${
+          onPointerDown={(e) => {
+            if (!isBottomSheet() || (e.target as HTMLElement).closest("button")) return;
+            drag.current = { startY: e.clientY, startT: performance.now() };
+            e.currentTarget.setPointerCapture(e.pointerId);
+          }}
+          onPointerMove={(e) => {
+            if (drag.current) setDragY(Math.max(0, e.clientY - drag.current.startY));
+          }}
+          onPointerUp={(e) => {
+            if (!drag.current) return;
+            const dy = Math.max(0, e.clientY - drag.current.startY);
+            const speed = dy / Math.max(1, performance.now() - drag.current.startT);
+            drag.current = null;
+            if (dy > DISMISS_DISTANCE || speed > DISMISS_VELOCITY) onClose();
+            setDragY(0);
+          }}
+          onPointerCancel={() => {
+            drag.current = null;
+            setDragY(0);
+          }}
+          className={`relative flex h-12 shrink-0 items-center justify-end gap-3 px-3 max-sm:cursor-grab max-sm:touch-none sm:h-14 ${
             scrolled && !stage ? "border-b border-rule" : "border-b border-transparent"
           }`}
         >
@@ -101,10 +129,15 @@ export function SongDrawer({ song, mode, onModeChange, onClose, onPatch, onPract
             className={`absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full sm:hidden ${stage ? "bg-ebony-line" : "bg-rule-strong"}`}
             aria-hidden
           />
+          {scrolled && !stage && (
+            <p className="min-w-0 flex-1 truncate pl-3 font-serif text-card-title text-ink animate-fade-in" aria-hidden>
+              {current.title}
+            </p>
+          )}
           <button
             type="button"
             onClick={onClose}
-            className={`flex h-10 w-10 items-center justify-center rounded ${stage ? "text-ivory-note" : "text-ink-2 hover:text-ink"}`}
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded ${stage ? "text-ivory-note" : "text-ink-2 hover:text-ink"}`}
             aria-label="Close song details"
           >
             <X size={18} weight="light" aria-hidden />
@@ -113,7 +146,16 @@ export function SongDrawer({ song, mode, onModeChange, onClose, onPatch, onPract
 
         <div className="flex-1 overflow-y-auto overscroll-contain" onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 4)}>
           {stage ? (
-            <PracticePlaceholder song={current} settings={effectivePractice(current, defaults)} onBack={() => onModeChange("details")} />
+            <PracticePlaceholder
+              song={current}
+              settings={effectivePractice(current, defaults)}
+              defaultTheme={defaults.theme}
+              onThemeChange={(theme) => {
+                void onPatch(current, { practice_theme: theme });
+                track("practice_theme_changed", { scope: "song", theme }, { songId: current.id });
+              }}
+              onBack={() => onModeChange("details")}
+            />
           ) : (
             <Details
               song={current}
@@ -171,7 +213,7 @@ function Details({
         </div>
 
         {confirming ? (
-          <div className="mt-4 flex flex-wrap items-center gap-3 rounded border border-rule p-3" role="alertdialog" aria-label="Delete this song?">
+          <div className="mt-4 flex flex-wrap items-center gap-3 rounded border border-rule p-3" role="alertdialog" aria-label="Confirm delete">
             <p className="text-ui text-ink">Delete this song?</p>
             <p className="basis-full text-meta text-ink-3 sm:order-last">Its practice history goes with it.</p>
             <div className="ml-auto flex gap-2">

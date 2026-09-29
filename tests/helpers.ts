@@ -132,7 +132,15 @@ const QA_EVENT_NAMES = [
   "practice_started",
   "transcription_rated",
   "suggestion_clicked",
+  "practice_theme_changed",
+  "drawer_opened",
 ];
+
+/**
+ * Events the suite causes on demo songs by only reading them (opening a demo song's drawer logs
+ * drawer_opened with that song's id). Teardown removes the ones this run created.
+ */
+const QA_DEMO_READ_EVENTS = ["drawer_opened"];
 
 /** Highest events.id right now. Everything the run creates has a larger id. */
 export async function maxEventId(): Promise<number> {
@@ -151,5 +159,12 @@ export async function deleteRunEvents(afterId: number) {
     .in("name", QA_EVENT_NAMES)
     .select("id");
   if (error) throw new Error(error.message);
-  return data?.length ?? 0;
+  const { data: reads, error: readsError } = await db()
+    .from("events")
+    .delete()
+    .gt("id", afterId)
+    .in("name", QA_DEMO_READ_EVENTS)
+    .select("id");
+  if (readsError) throw new Error(readsError.message);
+  return (data?.length ?? 0) + (reads?.length ?? 0);
 }

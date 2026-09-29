@@ -136,6 +136,11 @@ html [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="t
   outline-offset: 2px;
 }
 
+/* The empty-state roll needs a little more presence on the dark paper. */
+[data-theme="dark"] .empty-hint {
+  opacity: 0.4;
+}
+
 /* Copy carries the meaning; the default success/error glyphs are decoration. */
 html [data-sonner-toaster] [data-sonner-toast] [data-icon] {
   display: none;

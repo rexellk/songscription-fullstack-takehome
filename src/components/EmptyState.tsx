@@ -31,9 +31,9 @@ export function EmptyState({ onChooseFile, onTrySample, onLoadDemo, busy }: Prop
       <button
         type="button"
         onClick={onChooseFile}
-        className="relative mt-8 flex h-[200px] w-full flex-col items-center justify-center gap-3 overflow-hidden rounded border border-dashed border-rule-strong bg-paper-raised text-ink-2 transition-colors hover:border-ink-3 hover:text-ink"
+        className="relative mt-8 flex h-[200px] w-full flex-col items-center justify-center gap-3 overflow-hidden rounded border border-dashed border-ink-3 bg-paper-raised text-ink-2 transition-colors hover:border-ink-3 hover:text-ink"
       >
-        <div className="pointer-events-none absolute inset-x-6 inset-y-6 opacity-25" aria-hidden>
+        <div className="empty-hint pointer-events-none absolute inset-x-6 inset-y-6 opacity-25" aria-hidden>
           <PianoRoll notes={HINT} height={150} label="" />
         </div>
         <span className="relative flex flex-col items-center gap-3 rounded bg-paper-raised px-4 py-3">

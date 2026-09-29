@@ -456,7 +456,7 @@ test.describe("detail drawer", () => {
     const drawer = await openDrawer(page, f.title);
 
     await drawer.getByRole("button", { name: "Delete song" }).click();
-    const confirm = drawer.getByRole("alertdialog", { name: "Delete this song?" });
+    const confirm = drawer.getByRole("alertdialog", { name: "Confirm delete" });
     await expect(confirm).toBeVisible();
     await expect(confirm.getByRole("button", { name: "Cancel" })).toBeFocused();
     await confirm.getByRole("button", { name: "Cancel" }).click();
@@ -738,5 +738,176 @@ test.describe("keyboard and layout", () => {
     await expect(page.getByRole("dialog")).toBeVisible();
     expect(await overflow()).toBeLessThanOrEqual(0);
     await page.keyboard.press("Escape");
+  });
+});
+
+async function samplesReachable() {
+  try {
+    const res = await fetch("https://tonejs.github.io/audio/salamander/A4.mp3", {
+      method: "HEAD",
+      signal: AbortSignal.timeout(8000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/** Events for one song, newest first. */
+async function songEvents(title: string, name: string) {
+  const { data: song } = await db().from("songs").select("id").eq("title", title).single();
+  const { data } = await db()
+    .from("events")
+    .select("props")
+    .eq("name", name)
+    .eq("song_id", song!.id)
+    .order("id", { ascending: false });
+  return (data ?? []) as { props: Record<string, unknown> }[];
+}
+
+async function songTheme(title: string) {
+  const { data } = await db().from("songs").select("practice_theme").eq("title", title).single();
+  return data?.practice_theme ?? null;
+}
+
+/** Opens the drawer and switches to the Practice view. In practice mode the dialog is named by the song title too. */
+async function openPractice(page: Page, title: string) {
+  const drawer = await openDrawer(page, title);
+  await drawer.getByRole("button", { name: "Practice", exact: true }).click();
+  await expect(drawer.getByRole("img", { name: "Falling notes above a piano keyboard" })).toBeVisible();
+  return drawer;
+}
+
+test.describe("practice stage (QA songs only)", () => {
+  test("stage canvas renders with a non-zero size", async ({ page }) => {
+    await openLibrary(page);
+    const f = await addQaSong(page);
+    const drawer = await openPractice(page, f.title);
+    const canvas = drawer.getByRole("img", { name: "Falling notes above a piano keyboard" });
+    const box = await canvas.boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThan(0);
+    expect(box?.height ?? 0).toBeGreaterThan(0);
+    // The backing store is sized too (not the 300x150 default left unpainted).
+    const size = await canvas.evaluate((c: HTMLCanvasElement) => ({ w: c.width, h: c.height }));
+    expect(size.w).toBeGreaterThan(0);
+    expect(size.h).toBeGreaterThan(0);
+    await expect(drawer.getByText(/^\d+:\d{2} \/ \d+:\d{2}$/)).toBeVisible();
+  });
+
+  test("song theme: Petals persists after reload, Default resets to null, both logged", async ({ page }) => {
+    await openLibrary(page);
+    const f = await addQaSong(page);
+    let drawer = await openPractice(page, f.title);
+    const picker = () => drawer.getByRole("group", { name: "Practice theme for this song" });
+    await expect(picker().getByRole("radio")).toHaveCount(6);
+    for (const t of ["Default (Embers)", "Off", "Embers", "Petals", "Snow", "Stardust"])
+      await expect(picker().getByRole("radio", { name: t, exact: true })).toHaveCount(1);
+    await expect(picker().getByRole("radio", { name: /^Default \(/ })).toBeChecked();
+
+    let saved = page.waitForResponse(isPatch);
+    await picker().getByRole("radio", { name: "Petals", exact: true }).check({ force: true });
+    expect((await saved).ok()).toBe(true);
+    await expect(picker().getByRole("radio", { name: "Petals", exact: true })).toBeChecked();
+    expect(await songTheme(f.title)).toBe("petals");
+
+    await page.reload();
+    drawer = await openPractice(page, f.title);
+    await expect(picker().getByRole("radio", { name: "Petals", exact: true })).toBeChecked();
+
+    saved = page.waitForResponse(isPatch);
+    await picker().getByRole("radio", { name: /^Default \(/ }).check({ force: true });
+    expect((await saved).ok()).toBe(true);
+    await expect(picker().getByRole("radio", { name: /^Default \(/ })).toBeChecked();
+    expect(await songTheme(f.title)).toBeNull();
+
+    await expect
+      .poll(async () => (await songEvents(f.title, "practice_theme_changed")).map((e) => e.props.theme))
+      .toEqual([null, "petals"]);
+  });
+
+  test("stage Play switches to Pause", async ({ page }) => {
+    test.skip(!(await samplesReachable()), "tonejs.github.io (piano samples) is not reachable from this machine");
+    test.setTimeout(90_000);
+    await openLibrary(page);
+    const f = await addQaSong(page);
+    const drawer = await openPractice(page, f.title);
+    await drawer.getByRole("button", { name: `Play ${f.title}`, exact: true }).click();
+    const pause = drawer.getByRole("button", { name: `Pause ${f.title}`, exact: true });
+    await expect(pause).toBeVisible({ timeout: 45_000 });
+    await pause.click();
+    await expect(drawer.getByRole("button", { name: `Play ${f.title}`, exact: true })).toBeVisible();
+  });
+
+  test("practice from the drawer logs practice_started with surface drawer (and drawer_opened)", async ({ page }) => {
+    await openLibrary(page);
+    const f = await addQaSong(page);
+    await openPractice(page, f.title);
+    await expect.poll(async () => (await songEvents(f.title, "practice_started")).map((e) => e.props)).toEqual([
+      { surface: "drawer" },
+    ]);
+    await expect.poll(async () => (await songEvents(f.title, "drawer_opened")).map((e) => e.props)).toEqual([
+      { surface: "card" },
+    ]);
+  });
+
+  test("Up next: a practice started in the drawer keeps the slot (library narrowed to QA songs)", async ({ page }) => {
+    await openLibrary(page);
+    const a = await addQaSong(page);
+    const b = await addQaSong(page);
+    // Only QA songs reach the page, so Up next is built from them alone and no demo song can be clicked.
+    await page.route(SONGS_API, async (route) => {
+      if (route.request().method() !== "GET" || !route.request().url().includes("order=")) return route.continue();
+      const res = await route.fetch();
+      const rows = ((await res.json()) as { title: string }[]).filter((r) => r.title === a.title || r.title === b.title);
+      await route.fulfill({ response: res, json: rows });
+    });
+    await openLibrary(page);
+    await expect(cards(page)).toHaveCount(2);
+    const upNext = page.locator('section[aria-labelledby="up-next-title"]');
+    await expect(upNext.getByText("Start here")).toBeVisible(); // brand-new library: start_here slot
+    const top = upNext.getByRole("article");
+    const practiceBtn = top.getByRole("button", { name: /^Practice / });
+    const title = ((await practiceBtn.getAttribute("aria-label")) ?? "").replace(/^Practice /, "");
+    expect([a.title, b.title]).toContain(title);
+
+    // Open from Up next (the title, not its Practice button), then press Practice in the drawer.
+    await top.getByRole("button", { name: title, exact: true }).click();
+    const drawer = drawerFor(page, title);
+    await expect(drawer).toBeVisible();
+    await drawer.getByRole("button", { name: "Practice", exact: true }).click();
+
+    await expect.poll(async () => (await songEvents(title, "practice_started")).map((e) => e.props)).toEqual([
+      { surface: "drawer", slot: "start_here" },
+    ]);
+    await expect.poll(async () => (await songEvents(title, "drawer_opened")).map((e) => e.props)).toEqual([
+      { surface: "up_next" },
+    ]);
+  });
+});
+
+test.describe("library practice theme", () => {
+  test("settings popover: Snow persists across reload, then reset to Embers", async ({ page }) => {
+    await openLibrary(page);
+    const trigger = page.getByRole("button", { name: "Settings for Rexell" });
+    await trigger.click();
+    const dialog = page.getByRole("dialog", { name: "Settings" });
+    const group = dialog.getByRole("group", { name: "Practice theme", exact: true });
+    await expect(group.getByRole("radio")).toHaveCount(5);
+    for (const t of ["Off", "Embers", "Petals", "Snow", "Stardust"])
+      await expect(group.getByRole("radio", { name: t, exact: true })).toHaveCount(1);
+    await expect(group.getByRole("radio", { name: "Embers", exact: true })).toBeChecked();
+
+    await group.getByRole("radio", { name: "Snow", exact: true }).check({ force: true });
+    await expect(group.getByRole("radio", { name: "Snow", exact: true })).toBeChecked();
+
+    await page.reload();
+    await page.getByRole("button", { name: "Settings for Rexell" }).click();
+    await expect(group.getByRole("radio", { name: "Snow", exact: true })).toBeChecked();
+
+    await group.getByRole("radio", { name: "Embers", exact: true }).check({ force: true });
+    await expect(group.getByRole("radio", { name: "Embers", exact: true })).toBeChecked();
+    await page.reload();
+    await page.getByRole("button", { name: "Settings for Rexell" }).click();
+    await expect(group.getByRole("radio", { name: "Embers", exact: true })).toBeChecked();
   });
 });

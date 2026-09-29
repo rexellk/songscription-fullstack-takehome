@@ -70,6 +70,16 @@ export function Toolbar({ query, keys, total, shown, filtering, onChange }: Prop
         </label>
 
         <div className="ml-auto flex shrink-0 items-center gap-3">
+          <span className="relative font-mono text-meta text-ink-3" aria-live="polite">
+            {filtering && (
+              <>
+                <span>
+                  {shown} of {total}
+                </span>
+                <span className="sr-only"> songs</span>
+              </>
+            )}
+          </span>
           <label className="relative" title={`Sort: ${SORTS.find((s) => s.value === query.sort)?.label}`}>
             <span className="sr-only">Sort by</span>
             <SortAscending
@@ -93,7 +103,7 @@ export function Toolbar({ query, keys, total, shown, filtering, onChange }: Prop
         </div>
       </div>
 
-      <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+      <div className="relative -mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
         <div role="group" aria-label="Filter songs" className="flex shrink-0 gap-2">
           {FILTERS.map((f) => (
             <Chip key={f.value} selected={query.filter === f.value} onClick={() => onChange({ filter: f.value as Filter })}>
@@ -119,16 +129,6 @@ export function Toolbar({ query, keys, total, shown, filtering, onChange }: Prop
             <CaretDown size={12} weight="light" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink-2" aria-hidden />
           </label>
         )}
-        <span className="ml-auto shrink-0 pl-2 font-mono text-meta text-ink-3" aria-live="polite">
-          {filtering && (
-            <>
-              <span>
-                {shown} of {total}
-              </span>
-              <span className="sr-only"> songs</span>
-            </>
-          )}
-        </span>
       </div>
     </div>
   );

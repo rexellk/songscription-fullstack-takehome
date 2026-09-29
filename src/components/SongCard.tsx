@@ -5,6 +5,7 @@ import { memo, useState } from "react";
 import { DifficultyMeter } from "@/components/DifficultyMeter";
 import { PianoRoll } from "@/components/PianoRoll";
 import { PreviewButton } from "@/components/PreviewButton";
+import { previewStart } from "@/lib/player";
 import { usePreview } from "@/lib/usePlayer";
 import { formatDuration, timeAgo, timeAgoSpoken } from "@/lib/format";
 import type { Song } from "@/types";
@@ -49,6 +50,7 @@ export const SongCard = memo(function SongCard({ song, fresh, onOpen, onToggleFa
           height={96}
           emphasized={active || sounding}
           windowSec={sounding ? previewSeconds : undefined}
+          windowStart={sounding ? previewStart(song.preview_notes ?? []) : 0}
           playheadSec={preview.position}
           label={`Piano roll of ${song.title}`}
         />

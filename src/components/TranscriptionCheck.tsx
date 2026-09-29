@@ -79,7 +79,7 @@ export function TranscriptionCheck({ song, onSave, onRated }: Props) {
       ) : (
         <>
           <p className="mt-1 text-ui text-ink-2">Listen to the preview, then tell us.</p>
-          <div role="radiogroup" aria-labelledby="quality-title" className="mt-3 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
+          <div role="radiogroup" aria-labelledby="quality-title" className="-mx-6 mt-3 flex gap-2 overflow-x-auto px-6 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden">
             {OPTIONS.map((o) => (
               <button
                 key={o.value}
@@ -87,7 +87,7 @@ export function TranscriptionCheck({ song, onSave, onRated }: Props) {
                 role="radio"
                 aria-checked={rating === o.value}
                 onClick={() => void choose(o.value)}
-                className={`h-10 px-3 text-left sm:h-8 sm:text-center ${chip(rating === o.value)}`}
+                className={`h-10 shrink-0 px-3 sm:h-8 ${chip(rating === o.value)}`}
               >
                 {o.label}
               </button>
